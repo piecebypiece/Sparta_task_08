@@ -32,7 +32,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item|Component")
 	TObjectPtr<UStaticMeshComponent> StaticMesh;
 
-	// Inherited via IItemInterface
+	
 	virtual void OnItemOverlap(	UPrimitiveComponent* OverlappedComp,
 		AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,

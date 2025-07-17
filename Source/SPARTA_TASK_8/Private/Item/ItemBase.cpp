@@ -1,6 +1,7 @@
 #include "Item\ItemBase.h"
 #include "Components/SphereComponent.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(ItemBase)
 // Sets default values
 AItemBase::AItemBase()
 {
@@ -31,15 +32,23 @@ AItemBase::AItemBase()
 
 void AItemBase::OnItemOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+    if (OtherActor and OtherActor->ActorHasTag("Player") == false)
+    {
+        return;
+    }
+    
+    ActivateItem(OtherActor);
     GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Overlap!!")));
 }
 
 void AItemBase::OnItemEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
+
 }
 
 void AItemBase::ActivateItem(AActor* Activator)
 {
+
 }
 
 FName AItemBase::GetItemType() const

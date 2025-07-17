@@ -1,5 +1,7 @@
 #include "SpartaPlayerController.h"
 #include "EnhancedInputSubsystems.h" 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpartaPlayerController)
+
 ASpartaPlayerController::ASpartaPlayerController()
 	: InputMappingContext(nullptr),
 	MoveAction(nullptr),

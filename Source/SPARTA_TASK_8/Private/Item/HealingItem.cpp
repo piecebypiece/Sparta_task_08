@@ -3,6 +3,8 @@
 
 #include "Item/HealingItem.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(HealingItem)
+
 AHealingItem::AHealingItem()
 {
 	HealAmount = 20.0f;

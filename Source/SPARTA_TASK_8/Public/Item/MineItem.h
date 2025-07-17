@@ -17,6 +17,10 @@ class SPARTA_TASK_8_API AMineItem : public AItemBase
 public:
     AMineItem();
 
+protected:
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item|Component")
+    TObjectPtr<USphereComponent> ExplosionCollision;
+
     // 폭발까지 걸리는 시간 (5초)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Mine")
     float ExplosionDelay;
@@ -27,5 +31,10 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Mine")
     float ExplosionDamage;
 
+    // 지뢰 발동 여부
+    FTimerHandle ExplosionTimerHandle;
+
     virtual void ActivateItem(AActor* Activator) override;
+
+    void Explode();
 };

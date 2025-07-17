@@ -25,6 +25,7 @@ class SPARTA_TASK_8_API IItemInterface
 public:
 
 	// 플레이어가 이 아이템의 범위에 들어왔을 때 호출
+	UFUNCTION()
 	virtual void OnItemOverlap(UPrimitiveComponent* OverlappedComp,
 		AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,
@@ -32,6 +33,7 @@ public:
 		bool bFromSweep,
 		const FHitResult& SweepResult) = 0;
 	// 플레이어가 이 아이템의 범위를 벗어났을 때 호출
+	UFUNCTION()
 	virtual void OnItemEndOverlap(
 		UPrimitiveComponent* OverlappedComp,
 		AActor* OtherActor,
