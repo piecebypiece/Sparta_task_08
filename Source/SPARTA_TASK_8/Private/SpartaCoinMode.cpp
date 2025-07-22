@@ -80,6 +80,9 @@ void ASpartaCoinMode::StartLevel()
 
 void ASpartaCoinMode::StartWave()
 {
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Start Wave %d"), 
+		GetGameInstance<USpartaGameInstance>()->GetCurrentLevelIndex()));
+
 	const FLevelInfo* CurrentStageData = GetGameInstance<USpartaGameInstance>()->GetCurrentLevelInfo();
 	UStageWaveInfo* levelWaveInfo = nullptr;
 	levelWaveInfo = CurrentStageData ? 
