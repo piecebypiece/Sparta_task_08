@@ -93,7 +93,7 @@ void ASpartaPlayerController::ShowMainMenu(bool bIsRestart)
 			SetInputMode(FInputModeUIOnly());
 		}
 		
-		if (UTextBlock* ButtonText = Cast<UTextBlock>(MainMenuWidgetInstance->GetWidgetFromName(TEXT("StartButtonText"))))
+		if (UTextBlock* ButtonText = Cast<UTextBlock>(MainMenuWidgetInstance->GetWidgetFromName(TEXT("StartText"))))
 		{
 			if (bIsRestart)
 			{
@@ -115,10 +115,10 @@ void ASpartaPlayerController::ShowMainMenu(bool bIsRestart)
 
 			if (UTextBlock* TotalScoreText = Cast<UTextBlock>(MainMenuWidgetInstance->GetWidgetFromName("TotalScoreText")))
 			{
-				if (USpartaGameInstance* SpartaGameInstance = Cast<USpartaGameInstance>(UGameplayStatics::GetGameInstance(this)))
+				if (ASpartaGameState* GState = Cast<ASpartaGameState>(GetWorld()->GetGameState()))
 				{
 					TotalScoreText->SetText(FText::FromString(
-						FString::Printf(TEXT("Total Score: %d"), SpartaGameInstance->TotalScore)
+						FString::Printf(TEXT("Score: %d"), GState->GetScore())
 					));
 				}
 			}

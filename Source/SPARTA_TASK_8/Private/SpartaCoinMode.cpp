@@ -43,27 +43,20 @@ void ASpartaCoinMode::Tick(float DeltaSeconds)
 	{
 		float CurrentRemainingTime = SpartaGameState->GetRemainingWaveTime();
 		CurrentRemainingTime -= DeltaSeconds;
-		SpartaGameState->SetRemainingWaveTime(CurrentRemainingTime);
 
 		if (CurrentRemainingTime <= 0.0f)
 		{
-			EndWave(false);
+			CurrentRemainingTime = 0.f;
+			OnGameOver();
 		}
+		SpartaGameState->SetRemainingWaveTime(CurrentRemainingTime);
 	}
 }
 
 void ASpartaCoinMode::OnGameOver()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Game Over!!"));
-	
-	if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
-	{
-		if (ASpartaPlayerController* SpartaPlayerController = Cast<ASpartaPlayerController>(PlayerController))
-		{
-			SpartaPlayerController->SetPause(true);
-			SpartaPlayerController->ShowMainMenu(true);
-		}
-	}
+	EndWave(false);
 }
 
 void ASpartaCoinMode::StartLevel()
@@ -75,15 +68,11 @@ void ASpartaCoinMode::StartLevel()
 			SpartaPlayerController->ShowGameHUD();
 		}
 	}
-
 	ASpartaGameState* SpartaGameState = GetGameState<ASpartaGameState>();
 	if (SpartaGameState)
 	{
-		// 레벨 시작 시, 코인 개수 초기화
-		SpartaGameState->SetSpawnedCoinCount(0);
-		SpartaGameState->SetCollectedCoinCount(0);
+		SpartaGameState->AddScore(-SpartaGameState->GetScore());
 	}
-
 	// 첫 웨이브 시작
 	CurrentWaveIndex = 0;
 	StartWave();

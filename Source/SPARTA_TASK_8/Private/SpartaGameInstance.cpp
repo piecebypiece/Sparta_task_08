@@ -2,6 +2,7 @@
 
 
 #include "SpartaGameInstance.h"
+#include "SpartaGameState.h"
 #include "SpartaPlayerController.h"
 #include <Kismet\GameplayStatics.h>
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpartaGameInstance)
@@ -48,39 +49,55 @@ void USpartaGameInstance::EndLevel(bool bIsClear)
 
 		auto SpartaController = Cast<ASpartaPlayerController>(PlayerController);
 		SpartaController->ShowMainMenu(true);
-
+		SpartaController->SetPause(true);
 		return;
 	}
 
+	// 클리어 했으니 점수 더해줌.
+	if (UWorld* World = GetWorld())
+	{
+		if (ASpartaGameState* State = Cast<ASpartaGameState>(World->GetGameState()))
+		{	
+			TotalScore += State->GetScore();
+		}
+	}
 
 	// 다음 레벨 인덱스로
 	CurrentLevelIndex++;
-
 	// TODO : 클리어 UI 표시
 	if (CurrentLevelIndex >= GetMaxLevels())
 	{
+		CurrentLevelIndex = -1;
 		return;
 	}
-
-	// 레벨 맵 이름이 있다면 해당 맵 불러오기
-	if (LevelInfos.IsValidIndex(CurrentLevelIndex))
-	{
-		FString AssetPath = LevelInfos[CurrentLevelIndex].levelAsset.ToSoftObjectPath().ToString();
-		FString ShortName = FPackageName::GetShortName(AssetPath);
-		UGameplayStatics::OpenLevel(GetWorld(), FName(*ShortName));
-	}
+	StartLevel(CurrentLevelIndex);
 }
 
 // 게임 시작 - BasicLevel 오픈, GameInstance 데이터 리셋
 void USpartaGameInstance::StartGame()
 {
-	CurrentLevelIndex = 0;
-	TotalScore = 0;
-	UGameplayStatics::OpenLevel(GetWorld(), FName("MainLevel"));
+	if (CurrentLevelIndex == -1)
+	{
+		CurrentLevelIndex = 0;
+		TotalScore = 0;
+	}
+
+	StartLevel(CurrentLevelIndex);
+
 	
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	if (PC)
 	{
-		PC->SetPause(false);  // 일시정지
+		PC->SetPause(false);
+	}
+}
+
+void USpartaGameInstance::StartLevel(int32 levelNum)
+{
+	// 레벨 맵 이름이 있다면 해당 맵 불러오기
+	if (LevelInfos.IsValidIndex(levelNum))
+	{
+		FString AssetName = LevelInfos[CurrentLevelIndex].levelAsset.GetAssetName();
+		UGameplayStatics::OpenLevel(GetWorld(), FName(*AssetName));
 	}
 }
