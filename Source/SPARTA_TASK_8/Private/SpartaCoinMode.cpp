@@ -26,9 +26,12 @@ ASpartaCoinMode::ASpartaCoinMode()
 void ASpartaCoinMode::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// 게임 시작 시 첫 레벨부터 진행
-	StartLevel();
+	auto& GInst = *GetGameInstance<USpartaGameInstance>();
+	if (GInst.GetCurrentLevelIndex() > -1)
+	{
+		// 게임 시작 시 첫 레벨부터 진행
+		StartLevel();
+	}
 }
 
 void ASpartaCoinMode::Tick(float DeltaSeconds)
@@ -88,14 +91,23 @@ void ASpartaCoinMode::StartLevel()
 
 void ASpartaCoinMode::StartWave()
 {
-	if (!CurrentStageData || CurrentWaveIndex >= CurrentStageData->WaveInfo.Num())
+	const FLevelInfo* CurrentStageData = GetGameInstance<USpartaGameInstance>()->GetCurrentLevelInfo();
+	UStageWaveInfo* levelWaveInfo = nullptr;
+	levelWaveInfo = CurrentStageData ? 
+		Cast<UStageWaveInfo>(CurrentStageData->levelWaveInfo) : nullptr;
+
+	const bool bShouldEndLevel = 
+		!CurrentStageData || 
+		!levelWaveInfo || 
+		levelWaveInfo->WaveInfo.Num() <= CurrentWaveIndex;
+
+	if (bShouldEndLevel)
 	{
-		// 모든 웨이브가 끝났거나 데이터가 없으면 레벨 종료
 		GetGameInstance<USpartaGameInstance>()->EndLevel();
 		return;
 	}
 
-	FWaveInfo CurrentWave = CurrentStageData->WaveInfo[CurrentWaveIndex];
+	FWaveInfo CurrentWave = levelWaveInfo->WaveInfo[CurrentWaveIndex];
 
 	ASpartaGameState* SpartaGameState = GetGameState<ASpartaGameState>();
 	if (SpartaGameState)
@@ -108,8 +120,35 @@ void ASpartaCoinMode::StartWave()
 		SpartaGameState->SetRemainingWaveTime(CurrentWave.Time);
 	}
 
+	TArray<AActor*> FoundVolumes;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASpawnVolume::StaticClass(), FoundVolumes);
+
+	if (FoundVolumes.Num() > 0)
+	{
+		for (const auto SpawnActor : FoundVolumes)
+		{
+			const auto SpawnVolume = Cast<ASpawnVolume>(SpawnActor);
+			if (IsValid( SpawnVolume) == false)
+			{
+				continue;
+			}
+
+			for (int i = 0; i < SpawnVolume->GetSpawnNum(); i++)
+			{
+				AActor* SpawnedActor = SpawnVolume->SpawnRandomItem();
+				// 만약 스폰된 액터가 코인 타입이라면 SpawnedCoinCount 증가
+				if (SpawnedActor && SpawnedActor->IsA(ACoinItem::StaticClass()))
+				{
+					SpartaGameState->SetSpawnedCoinCount(SpartaGameState->GetSpawnedCoinCount() + 1);
+				}
+			}
+		}
+	}
+
 	// 웨이브 함수 실행
 	ProcessWaveFunction(CurrentWave.WaveFunctionType);
+
+
 
 	UE_LOG(LogTemp, Warning, TEXT("Wave %d Start! Duration: %.1f"), CurrentWaveIndex + 1, CurrentWave.Time);
 }
@@ -142,29 +181,6 @@ void ASpartaCoinMode::ProcessWaveFunction(EWaveFunction FuncType)
 			break;
 	}
 
-	// 현재 맵에 배치된 모든 SpawnVolume을 찾아 아이템 40개를 스폰 (임시)
-	TArray<AActor*> FoundVolumes;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASpawnVolume::StaticClass(), FoundVolumes);
-
-	const int32 ItemToSpawn = 40;
-
-	for (int32 i = 0; i < ItemToSpawn; i++)
-	{
-		if (FoundVolumes.Num() > 0)
-		{
-			ASpawnVolume* SpawnVolume = Cast<ASpawnVolume>(FoundVolumes[0]);
-			if (SpawnVolume)
-			{
-				AActor* SpawnedActor = SpawnVolume->SpawnRandomItem();
-				// 만약 스폰된 액터가 코인 타입이라면 SpawnedCoinCount 증가
-				if (SpawnedActor && SpawnedActor->IsA(ACoinItem::StaticClass()))
-				{
-					SpartaGameState->SetSpawnedCoinCount(SpartaGameState->GetSpawnedCoinCount() + 1);
-				}
-			}				
-		}
-	}
-
 	UE_LOG(LogTemp, Log, TEXT("Spawned %d coin"), SpartaGameState->GetSpawnedCoinCount());
 }
 
@@ -172,6 +188,7 @@ void ASpartaCoinMode::ProcessWaveFunction(EWaveFunction FuncType)
 
 void ASpartaCoinMode::OnCoinCollected(ACoinItem* CoinItem)
 {
+
 	ASpartaGameState* SpartaGameState = GetGameState<ASpartaGameState>();
 	if (SpartaGameState)
 	{
@@ -182,11 +199,20 @@ void ASpartaCoinMode::OnCoinCollected(ACoinItem* CoinItem)
 			SpartaGameState->GetCollectedCoinCount(),
 			SpartaGameState->GetSpawnedCoinCount())
 
+		ASpartaPlayerController* Controller = nullptr;
+
+		if (GetWorld() &&
+			(Controller = Cast<ASpartaPlayerController>(GetWorld()->GetFirstPlayerController())))
+		{
+			Controller->UpdateHUD();
+		}
+
 		// 현재 레벨에서 스폰된 코인을 전부 주웠다면 즉시 Wave 종료
 		if (SpartaGameState->GetSpawnedCoinCount() > 0 
 			&& SpartaGameState->GetCollectedCoinCount() >= SpartaGameState->GetSpawnedCoinCount())
 		{
 			EndWave();
 		}
+
 	}
 }

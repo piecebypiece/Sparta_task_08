@@ -47,14 +47,14 @@ void ASpartaPlayerController::BeginPlay()
         ShowMainMenu(false);
     }
 
-    /*if (HUDWidgetClass)
-    {
-        HUDWidgetInstance = CreateWidget<UUserWidget>(this, HUDWidgetClass);
-        if (HUDWidgetInstance)
-        {
-            HUDWidgetInstance->AddToViewport();
-        }
-    }*/
+	// 30초 후에 OnLevelTimeUp()가 호출되도록 타이머 설정
+	GetWorldTimerManager().SetTimer(
+			HUDUpdateTimerHandle,
+			this,
+			&ASpartaPlayerController::UpdateHUD,
+			0.1f,
+			true
+		);
 }
 
 UUserWidget* ASpartaPlayerController::GetHUDWidget() const
@@ -90,14 +90,7 @@ void ASpartaPlayerController::ShowMainMenu(bool bIsRestart)
 			bShowMouseCursor = true;
 			SetInputMode(FInputModeUIOnly());
 		}
-
-		if (UButton* StartButton = Cast<UButton>( MainMenuWidgetInstance->GetWidgetFromName(TEXT("StartButton"))))
-		{
-			StartButton->OnClicked.Clear();
-			StartButton->OnClicked.AddDynamic(this, &ASpartaPlayerController::StartGame);
-		}
-
-
+		
 		if (UTextBlock* ButtonText = Cast<UTextBlock>(MainMenuWidgetInstance->GetWidgetFromName(TEXT("StartButtonText"))))
 		{
 			if (bIsRestart)
@@ -162,20 +155,6 @@ void ASpartaPlayerController::ShowGameHUD()
 	}
 }
 
-// 게임 시작 - BasicLevel 오픈, GameInstance 데이터 리셋
-void ASpartaPlayerController::StartGame()
-{
-	if (USpartaGameInstance* SpartaGameInstance = Cast<USpartaGameInstance>(UGameplayStatics::GetGameInstance(this)))
-	{
-		SpartaGameInstance->SetCurrentLevelIndex(0);
-		SpartaGameInstance->TotalScore = 0;
-	}
-
-	UGameplayStatics::OpenLevel(GetWorld(), FName("MainLevel"));
-	SetPause(false);
-}
-
-
 void ASpartaPlayerController::UpdateHUD()
 {
 	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
@@ -194,7 +173,7 @@ void ASpartaPlayerController::UpdateHUD()
 
 	if (UTextBlock* TimeText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("Time"))))
 	{
-		float RemainingTime = 0.f;
+		float RemainingTime = 1.f; // TODO : Game Mode 
 		TimeText->SetText(FText::FromString(FString::Printf(TEXT("Time: %.1f"), RemainingTime)));
 	}
 

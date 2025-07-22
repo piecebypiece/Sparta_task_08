@@ -16,9 +16,6 @@ class SPARTA_TASK_8_API ASpartaCoinMode : public AGameMode
 	GENERATED_BODY()
 
 protected:
-	// 현재 스테이지의 웨이브 정보가 담긴 데이터 애셋
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wave")
-	TObjectPtr<class UStageWaveInfo> CurrentStageData;
 
 	// 현재 진행 중인 웨이브의 인덱스
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Wave")

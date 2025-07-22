@@ -19,11 +19,12 @@ struct FWaveInfo
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Time;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<ASpawnVolume> SpawnVolume;
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<TObjectPtr<ASpawnVolume>> SpawnVolumeArray;*/
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EWaveFunction WaveFunctionType;
+
 };
 
 

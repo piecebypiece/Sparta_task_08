@@ -5,6 +5,19 @@
 #include "CoreMinimal.h"
 #include "SpartaGameInstance.generated.h"
 
+
+USTRUCT(BlueprintType)
+struct FLevelInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSoftObjectPtr<UWorld> levelAsset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<UDataAsset> levelWaveInfo;
+};
+
 /**
  * 
  */
@@ -23,15 +36,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "GameData")
 	int32 CurrentLevelIndex;
 
-	// 각 레벨이 유지되는 시간 (초 단위)
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Level")
-	float LevelDuration;
-	// 전체 레벨의 개수
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level")
-	int32 MaxLevels;
-	// 실제 레벨 맵 이름 배열. 여기 있는 인덱스를 차례대로 연동
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Level")
-	TArray<FName> LevelMapNames;
+	TArray<FLevelInfo> LevelInfos;
+	//TArray<FName> LevelMapNames;
 
 	UFUNCTION(BlueprintCallable, Category = "GameData")
 	void AddToScore(int32 Amount);	
@@ -43,20 +51,21 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Level")
 	int32 GetCurrentLevelIndex() const;
 
-	// 최대 레벨 개수를 설정하는 함수
-	UFUNCTION(BlueprintCallable, Category = "Level")
-	void SetMaxLevels(int32 Count);
 	// 최대 레벨 개수를 가져오는 함수
-	UFUNCTION(BlueprintPure, Category = "Level")
-	int32 GetMaxLevels() const;
-
-	// 레벨 맵 이름을 설정하는 함수
 	UFUNCTION(BlueprintCallable, Category = "Level")
-	void SetLevelMapNames(const TArray<FName>& Names);
-	// 레벨 맵 이름을 가져오는 함수
-	UFUNCTION(BlueprintPure, Category = "Level")
-	const TArray<FName>& GetLevelMapNames() const;	
-	
+	int32 GetMaxLevels() const { return LevelInfos.Num(); };	
 
+	const FLevelInfo* GetCurrentLevelInfo() const
+	{
+		if (LevelInfos.IsValidIndex(CurrentLevelIndex))
+		{
+			return &LevelInfos[CurrentLevelIndex];
+		}
+		return nullptr;
+	}
+	
+	UFUNCTION(BlueprintCallable, Category = "Level")
 	void EndLevel();
+	UFUNCTION(BlueprintCallable, Category = "Level")
+	void StartGame();
 };

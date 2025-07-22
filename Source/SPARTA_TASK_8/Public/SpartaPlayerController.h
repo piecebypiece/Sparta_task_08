@@ -56,11 +56,11 @@ public :
 	// 메인 메뉴 표시
 	UFUNCTION(BlueprintCallable, Category = "Menu")
 	void ShowMainMenu(bool bIsRestart);
-	// 게임 시작
-	UFUNCTION(BlueprintCallable, Category = "Menu")
-	void StartGame();
 
 	void UpdateHUD();
 protected:
 	virtual void BeginPlay() override;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "HUD")
+	FTimerHandle HUDUpdateTimerHandle;
 };

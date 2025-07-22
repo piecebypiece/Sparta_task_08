@@ -20,6 +20,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Spawning")
     AActor* SpawnRandomItem();
 
+    UFUNCTION(BlueprintCallable, Category = "Spawning")
+    int32 GetSpawnNum() const { return SpawnNum; }
+
 protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Spawning")
     TObjectPtr<USceneComponent> Scene;
@@ -29,7 +32,11 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawning")
     TObjectPtr<UDataTable> ItemDataTable;
 
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawning")
+    int32 SpawnNum;
+
     FVector GetRandomPointInVolume() const;
     FItemSpawnRow* GetRandomItem() const;
     AActor* SpawnItem(TSubclassOf<AActor> ItemClass);
+
 };
