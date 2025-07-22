@@ -8,6 +8,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/TextBlock.h"
+#include "Components/ProgressBar.h"
 #include "Components/WidgetComponent.h"
 #include "SpartaGameState.h"
 #include "SpartaCoinMode.h"
@@ -269,5 +270,9 @@ void ASpartaCharacter::UpdateOverheadHP()
     if (UTextBlock* HPText = Cast<UTextBlock>(OverheadWidgetInstance->GetWidgetFromName(TEXT("OverHeadHP"))))
     {
         HPText->SetText(FText::FromString(FString::Printf(TEXT("%.0f / %.0f"), Health, MaxHealth)));
+    }
+    if (UProgressBar* HPProgressBar = Cast<UProgressBar>(OverheadWidgetInstance->GetWidgetFromName(TEXT("HPProgeress"))))
+    {
+        HPProgressBar->SetPercent(Health / MaxHealth);
     }
 }

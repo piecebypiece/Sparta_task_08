@@ -184,13 +184,12 @@ void ASpartaPlayerController::UpdateHUD()
 
 	if (UTextBlock* ScoreText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("Score"))))
 	{
-		if (UGameInstance* GameInstance = GetGameInstance())
+
+		if (ASpartaGameState* GState = Cast<ASpartaGameState>(GetWorld()->GetGameState()))
 		{
-			USpartaGameInstance * SpartaGameInstance = Cast<USpartaGameInstance>(GameInstance);
-			if (SpartaGameInstance)
-			{
-				ScoreText->SetText(FText::FromString(FString::Printf(TEXT("Score: %d"), SpartaGameInstance->TotalScore)));
-			}
+			ScoreText->SetText(FText::FromString(
+				FString::Printf(TEXT("Score: %d"), GState->GetScore())
+			));
 		}
 	}
 	if (UTextBlock* LevelIndexText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("Level"))))

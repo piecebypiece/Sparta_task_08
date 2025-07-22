@@ -2,7 +2,7 @@
 
 
 #include "Item/HealingItem.h"
-
+#include "SpartaCharacter.h"
 #include UE_INLINE_GENERATED_CPP_BY_NAME(HealingItem)
 
 AHealingItem::AHealingItem()
@@ -14,6 +14,14 @@ AHealingItem::AHealingItem()
 void AHealingItem::ActivateItem(AActor* Activator)
 {
 	Super::ActivateItem(Activator);
-	// 플레이어 캐릭터의 체력을 20만큼 회복시키는 로직 등을 구현 가능
+	
+
+	if ((Activator || Activator->ActorHasTag("Player")) == false)
+	{
+		return;
+	}
+
+	ASpartaCharacter* Character = Cast<ASpartaCharacter>(Activator);
+	Character->AddHealth(HealAmount);
 	DestroyItem();
 }

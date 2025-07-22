@@ -96,7 +96,7 @@ void ASpartaCoinMode::StartWave()
 		return;
 	}
 
-	FWaveInfo CurrentWave = levelWaveInfo->WaveInfo[CurrentWaveIndex];
+	const FWaveInfo& CurrentWave = levelWaveInfo->WaveInfo[CurrentWaveIndex];
 
 	ASpartaGameState* SpartaGameState = GetGameState<ASpartaGameState>();
 	if (SpartaGameState)
@@ -114,21 +114,50 @@ void ASpartaCoinMode::StartWave()
 
 	if (FoundVolumes.Num() > 0)
 	{
-		for (const auto SpawnActor : FoundVolumes)
-		{
-			const auto SpawnVolume = Cast<ASpawnVolume>(SpawnActor);
-			if (IsValid( SpawnVolume) == false)
-			{
-				continue;
-			}
+		int32 CollectCoinScore = CurrentWave.CollectCoinScore;
 
-			for (int i = 0; i < SpawnVolume->GetSpawnNum(); i++)
+		TArray<int32> VolumeSpawnNums;
+		VolumeSpawnNums.Reserve(FoundVolumes.Num());
+		for (int32 i = 0; i < FoundVolumes.Num(); ++i)
+			VolumeSpawnNums.Push(0);
+
+		bool bLastSpawn = true; 
+		while (bLastSpawn)
+		{
+			bLastSpawn = false;
+			for (int32 i = 0; i < FoundVolumes.Num(); ++i)
 			{
-				AActor* SpawnedActor = SpawnVolume->SpawnRandomItem();
+				const auto SpawnVolumesActor = FoundVolumes[i];
+				const auto SpawnVolume = Cast<ASpawnVolume>(SpawnVolumesActor);
+				if (IsValid(SpawnVolume) == false
+					or VolumeSpawnNums[i] == SpawnVolume->GetSpawnNum())
+				{
+					continue;
+				}
+
+				TSubclassOf<AActor> RandomItemClass = SpawnVolume->RandomItemClass();
+				bool bIsCoin = RandomItemClass->IsChildOf(ACoinItem::StaticClass());
+				AActor* SpawnedActor = nullptr;
+
+				++VolumeSpawnNums[i];
+				bLastSpawn = true;
+
+				if (bIsCoin)
+				{	// 코인은 정해진 만큼만 소환된다.
+					ACoinItem* CDOCoin = Cast<ACoinItem>(RandomItemClass.GetDefaultObject());
+					CollectCoinScore -= CDOCoin->GetPointValue();
+				}
+				SpawnedActor = SpawnVolume->SpawnItem(RandomItemClass);
 				// 만약 스폰된 액터가 코인 타입이라면 SpawnedCoinCount 증가
-				if (SpawnedActor && SpawnedActor->IsA(ACoinItem::StaticClass()))
+				if (SpawnedActor && bIsCoin)
 				{
 					SpartaGameState->SetSpawnedCoinCount(SpartaGameState->GetSpawnedCoinCount() + 1);
+				}
+
+				if (bIsCoin and CollectCoinScore < 0)
+				{	// 더이상 코인은 소환할 수 없기 때문에 이 볼륨에서 추가 소환을 막는다.
+					VolumeSpawnNums[i] = SpawnVolume->GetSpawnNum();
+					bLastSpawn = false;
 				}
 			}
 		}

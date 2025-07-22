@@ -20,9 +20,15 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Spawning")
     AActor* SpawnRandomItem();
 
+
+    UFUNCTION(BlueprintCallable, Category = "Spawning")
+    TSubclassOf<AActor> RandomItemClass();
+
     UFUNCTION(BlueprintCallable, Category = "Spawning")
     int32 GetSpawnNum() const { return SpawnNum; }
 
+    UFUNCTION(BlueprintCallable, Category = "Spawning")
+    AActor* SpawnItem(TSubclassOf<AActor> ItemClass);
 protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Spawning")
     TObjectPtr<USceneComponent> Scene;
@@ -37,6 +43,5 @@ protected:
 
     FVector GetRandomPointInVolume() const;
     FItemSpawnRow* GetRandomItem() const;
-    AActor* SpawnItem(TSubclassOf<AActor> ItemClass);
 
 };

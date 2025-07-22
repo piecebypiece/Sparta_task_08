@@ -22,12 +22,19 @@ ASpawnVolume::ASpawnVolume()
 
 AActor* ASpawnVolume::SpawnRandomItem()
 {
+	if (TSubclassOf<AActor> ActualClass = RandomItemClass())
+	{
+		return SpawnItem(ActualClass);
+	}
+
+	return nullptr;
+}
+
+TSubclassOf<AActor> ASpawnVolume::RandomItemClass()
+{
     if (FItemSpawnRow* SelectedRow = GetRandomItem())
     {
-        if (UClass* ActualClass = SelectedRow->ItemClass.Get())
-        {
-            return SpawnItem(ActualClass);
-        }
+        return SelectedRow->ItemClass.Get();
     }
     return nullptr;
 }

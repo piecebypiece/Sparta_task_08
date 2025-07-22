@@ -25,6 +25,8 @@ struct FWaveInfo
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EWaveFunction WaveFunctionType;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 CollectCoinScore;
 };
 
 
