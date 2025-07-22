@@ -200,11 +200,13 @@ void ASpartaCoinMode::OnCoinCollected(ACoinItem* CoinItem)
 			SpartaGameState->GetSpawnedCoinCount())
 
 		ASpartaPlayerController* Controller = nullptr;
+		UWorld* World = GetWorld();
 
-		if (GetWorld() &&
-			(Controller = Cast<ASpartaPlayerController>(GetWorld()->GetFirstPlayerController())))
+		if (World)
 		{
-			Controller->UpdateHUD();
+			Controller = Cast<ASpartaPlayerController>(World->GetFirstPlayerController());
+			if (Controller)
+				Controller->UpdateHUD();
 		}
 
 		// 현재 레벨에서 스폰된 코인을 전부 주웠다면 즉시 Wave 종료

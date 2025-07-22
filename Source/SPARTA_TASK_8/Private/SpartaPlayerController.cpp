@@ -1,11 +1,13 @@
 #include "SpartaPlayerController.h"
 #include "EnhancedInputSubsystems.h" 
-#include "Blueprint/UserWidget.h"
+
 #include "SpartaGameInstance.h"
+#include "SpartaGameState.h"
+
 #include "Kismet/GameplayStatics.h"
+#include "Blueprint/UserWidget.h"
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
-#include "SpartaGameInstance.h"
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpartaPlayerController)
 
 ASpartaPlayerController::ASpartaPlayerController()
@@ -169,12 +171,15 @@ void ASpartaPlayerController::UpdateHUD()
 		return;
 	}
 	
-	auto* SpartaGameState = GetGameInstance<USpartaGameInstance>();
+	auto* SpartaGameInst = GetGameInstance<USpartaGameInstance>();
 
 	if (UTextBlock* TimeText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("Time"))))
 	{
-		float RemainingTime = 1.f; // TODO : Game Mode 
-		TimeText->SetText(FText::FromString(FString::Printf(TEXT("Time: %.1f"), RemainingTime)));
+		if (ASpartaGameState* State = Cast<ASpartaGameState>(GetWorld()->GetGameState()))
+		{
+			float RemainingTime = State->GetRemainingWaveTime();
+			TimeText->SetText(FText::FromString(FString::Printf(TEXT("Time: %.1f"), RemainingTime)));
+		}
 	}
 
 	if (UTextBlock* ScoreText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("Score"))))
@@ -190,6 +195,6 @@ void ASpartaPlayerController::UpdateHUD()
 	}
 	if (UTextBlock* LevelIndexText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("Level"))))
 	{
-		LevelIndexText->SetText(FText::FromString(FString::Printf(TEXT("Level: %d"), SpartaGameState->GetCurrentLevelIndex() + 1)));
+		LevelIndexText->SetText(FText::FromString(FString::Printf(TEXT("Level: %d"), SpartaGameInst->GetCurrentLevelIndex() + 1)));
 	}
 }
