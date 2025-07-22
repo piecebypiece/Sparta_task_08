@@ -41,7 +41,7 @@ public:
 
 	// 웨이브 종료 함수
 	UFUNCTION(BlueprintCallable, Category = "Wave")
-	void EndWave();
+	void EndWave(bool bIsClear);
 
 
 protected:

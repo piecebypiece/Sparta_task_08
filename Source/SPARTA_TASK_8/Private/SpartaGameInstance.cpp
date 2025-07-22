@@ -2,6 +2,7 @@
 
 
 #include "SpartaGameInstance.h"
+#include "SpartaPlayerController.h"
 #include <Kismet\GameplayStatics.h>
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpartaGameInstance)
 
@@ -37,8 +38,21 @@ int32 USpartaGameInstance::GetCurrentLevelIndex() const
 }
 
 
-void USpartaGameInstance::EndLevel()
+void USpartaGameInstance::EndLevel(bool bIsClear)
 {
+	if (bIsClear == false)
+	{
+		auto World = GetWorld();
+
+		auto PlayerController = World->GetFirstPlayerController();
+
+		auto SpartaController = Cast<ASpartaPlayerController>(PlayerController);
+		SpartaController->ShowMainMenu(true);
+
+		return;
+	}
+
+
 	// 다음 레벨 인덱스로
 	CurrentLevelIndex++;
 

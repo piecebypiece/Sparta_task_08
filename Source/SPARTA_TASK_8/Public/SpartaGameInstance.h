@@ -65,7 +65,7 @@ public:
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Level")
-	void EndLevel();
+	void EndLevel(bool bIsClear);
 	UFUNCTION(BlueprintCallable, Category = "Level")
 	void StartGame();
 };

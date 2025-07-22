@@ -47,7 +47,7 @@ void ASpartaCoinMode::Tick(float DeltaSeconds)
 
 		if (CurrentRemainingTime <= 0.0f)
 		{
-			EndWave();
+			EndWave(false);
 		}
 	}
 }
@@ -103,7 +103,7 @@ void ASpartaCoinMode::StartWave()
 
 	if (bShouldEndLevel)
 	{
-		GetGameInstance<USpartaGameInstance>()->EndLevel();
+		GetGameInstance<USpartaGameInstance>()->EndLevel(true);
 		return;
 	}
 
@@ -153,11 +153,18 @@ void ASpartaCoinMode::StartWave()
 	UE_LOG(LogTemp, Warning, TEXT("Wave %d Start! Duration: %.1f"), CurrentWaveIndex + 1, CurrentWave.Time);
 }
 
-void ASpartaCoinMode::EndWave()
+void ASpartaCoinMode::EndWave(bool bIsClear)
 {
-	// 다음 웨이브로 진행
-	CurrentWaveIndex++;
-	StartWave();
+	if(bIsClear)
+	{
+		// 다음 웨이브로 진행
+		CurrentWaveIndex++;
+		StartWave();
+	}
+	else
+	{
+		GetGameInstance<USpartaGameInstance>()->EndLevel(false);
+	}
 }
 
 void ASpartaCoinMode::ProcessWaveFunction(EWaveFunction FuncType)
@@ -213,7 +220,7 @@ void ASpartaCoinMode::OnCoinCollected(ACoinItem* CoinItem)
 		if (SpartaGameState->GetSpawnedCoinCount() > 0 
 			&& SpartaGameState->GetCollectedCoinCount() >= SpartaGameState->GetSpawnedCoinCount())
 		{
-			EndWave();
+			EndWave(true);
 		}
 
 	}
