@@ -1,5 +1,11 @@
 #include "SpartaPlayerController.h"
 #include "EnhancedInputSubsystems.h" 
+#include "Blueprint/UserWidget.h"
+#include "SpartaGameInstance.h"
+#include "Kismet/GameplayStatics.h"
+#include "Components/TextBlock.h"
+#include "Components/Button.h"
+#include "SpartaGameInstance.h"
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpartaPlayerController)
 
 ASpartaPlayerController::ASpartaPlayerController()
@@ -7,7 +13,11 @@ ASpartaPlayerController::ASpartaPlayerController()
 	MoveAction(nullptr),
 	JumpAction(nullptr),
 	LookAction(nullptr),
-	SprintAction(nullptr)
+	SprintAction(nullptr),
+    HUDWidgetClass(nullptr),
+    HUDWidgetInstance(nullptr),
+    MainMenuWidgetClass(nullptr),
+    MainMenuWidgetInstance(nullptr)
 {
 }
 
@@ -30,4 +40,177 @@ void ASpartaPlayerController::BeginPlay()
             }
         }
     }
+
+    FString CurrentMapName = GetWorld()->GetMapName();
+    if (CurrentMapName.Contains("MenuLevel"))
+    {
+        ShowMainMenu(false);
+    }
+
+    /*if (HUDWidgetClass)
+    {
+        HUDWidgetInstance = CreateWidget<UUserWidget>(this, HUDWidgetClass);
+        if (HUDWidgetInstance)
+        {
+            HUDWidgetInstance->AddToViewport();
+        }
+    }*/
+}
+
+UUserWidget* ASpartaPlayerController::GetHUDWidget() const
+{
+    return HUDWidgetInstance;
+}
+
+// 메뉴 UI 표시
+void ASpartaPlayerController::ShowMainMenu(bool bIsRestart)
+{
+	// HUD가 켜져 있다면 닫기
+	if (HUDWidgetInstance)
+	{
+		HUDWidgetInstance->RemoveFromParent();
+		HUDWidgetInstance = nullptr;
+	}
+
+	// 이미 메뉴가 떠 있으면 제거
+	if (MainMenuWidgetInstance)
+	{
+		MainMenuWidgetInstance->RemoveFromParent();
+		MainMenuWidgetInstance = nullptr;
+	}
+
+	// 메뉴 UI 생성
+	if (MainMenuWidgetClass)
+	{		
+		MainMenuWidgetInstance = CreateWidget<UUserWidget>(this, MainMenuWidgetClass);
+		if (MainMenuWidgetInstance)
+		{
+			MainMenuWidgetInstance->AddToViewport();
+
+			bShowMouseCursor = true;
+			SetInputMode(FInputModeUIOnly());
+		}
+
+		if (UButton* StartButton = Cast<UButton>( MainMenuWidgetInstance->GetWidgetFromName(TEXT("StartButton"))))
+		{
+			StartButton->OnClicked.Clear();
+			StartButton->OnClicked.AddDynamic(this, &ASpartaPlayerController::StartGame);
+		}
+
+
+		if (UTextBlock* ButtonText = Cast<UTextBlock>(MainMenuWidgetInstance->GetWidgetFromName(TEXT("StartButtonText"))))
+		{
+			if (bIsRestart)
+			{
+				ButtonText->SetText(FText::FromString(TEXT("Restart")));
+			}
+			else
+			{
+				ButtonText->SetText(FText::FromString(TEXT("Start")));
+			}
+		}
+
+		if (bIsRestart)
+		{
+			UFunction* PlayAnimFunc = MainMenuWidgetInstance->FindFunction(FName("PlayGameOverAnim"));
+			if (PlayAnimFunc)
+			{
+				MainMenuWidgetInstance->ProcessEvent(PlayAnimFunc, nullptr);
+			}
+
+			if (UTextBlock* TotalScoreText = Cast<UTextBlock>(MainMenuWidgetInstance->GetWidgetFromName("TotalScoreText")))
+			{
+				if (USpartaGameInstance* SpartaGameInstance = Cast<USpartaGameInstance>(UGameplayStatics::GetGameInstance(this)))
+				{
+					TotalScoreText->SetText(FText::FromString(
+						FString::Printf(TEXT("Total Score: %d"), SpartaGameInstance->TotalScore)
+					));
+				}
+			}
+		}
+	}
+}
+
+// 게임 HUD 표시
+void ASpartaPlayerController::ShowGameHUD()
+{
+	// HUD가 켜져 있다면 닫기
+	if (HUDWidgetInstance)
+	{
+		HUDWidgetInstance->RemoveFromParent();
+		HUDWidgetInstance = nullptr;
+	}
+
+	// 이미 메뉴가 떠 있으면 제거
+	if (MainMenuWidgetInstance)
+	{
+		MainMenuWidgetInstance->RemoveFromParent();
+		MainMenuWidgetInstance = nullptr;
+	}
+
+	if (HUDWidgetClass)
+	{
+		HUDWidgetInstance = CreateWidget<UUserWidget>(this, HUDWidgetClass);
+		if (HUDWidgetInstance)
+		{
+			HUDWidgetInstance->AddToViewport();
+
+			bShowMouseCursor = false;
+			SetInputMode(FInputModeGameOnly());
+			UpdateHUD();
+		}
+	}
+}
+
+// 게임 시작 - BasicLevel 오픈, GameInstance 데이터 리셋
+void ASpartaPlayerController::StartGame()
+{
+	if (USpartaGameInstance* SpartaGameInstance = Cast<USpartaGameInstance>(UGameplayStatics::GetGameInstance(this)))
+	{
+		SpartaGameInstance->SetCurrentLevelIndex(0);
+		SpartaGameInstance->TotalScore = 0;
+	}
+
+	UGameplayStatics::OpenLevel(GetWorld(), FName("MainLevel"));
+	SetPause(false);
+}
+
+
+void ASpartaPlayerController::UpdateHUD()
+{
+	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+	if (!IsValid(PlayerController))
+	{
+		return;
+	}
+	ASpartaPlayerController* SpartaPlayerController = Cast<ASpartaPlayerController>(PlayerController);
+	UUserWidget* HUDWidget = SpartaPlayerController->GetHUDWidget();
+	if (!IsValid(HUDWidget))
+	{
+		return;
+	}
+	
+	auto* SpartaGameState = GetGameInstance<USpartaGameInstance>();
+
+	if (UTextBlock* TimeText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("Time"))))
+	{
+		float RemainingTime = 0.f;
+		TimeText->SetText(FText::FromString(FString::Printf(TEXT("Time: %.1f"), RemainingTime)));
+	}
+
+	if (UTextBlock* ScoreText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("Score"))))
+	{
+		if (UGameInstance* GameInstance = GetGameInstance())
+		{
+			USpartaGameInstance * SpartaGameInstance = Cast<USpartaGameInstance>(GameInstance);
+			if (SpartaGameInstance)
+			{
+				ScoreText->SetText(FText::FromString(FString::Printf(TEXT("Score: %d"), SpartaGameInstance->TotalScore)));
+			}
+		}
+	}
+	if (UTextBlock* LevelIndexText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("Level"))))
+	{
+		LevelIndexText->SetText(FText::FromString(FString::Printf(TEXT("Level: %d"), SpartaGameState->GetCurrentLevelIndex() + 1)));
+	}
 }

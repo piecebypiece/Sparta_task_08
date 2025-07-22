@@ -16,6 +16,11 @@ public:
 	// Sets default values for this actor's properties
 	ACoinItem();
 
+	int32 GetPointValue() const 
+	{
+		return PointValue; 
+	}
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

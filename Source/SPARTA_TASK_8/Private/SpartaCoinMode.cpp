@@ -3,8 +3,17 @@
 
 #include "SpartaCoinMode.h"
 #include "SpartaCharacter.h"
-#include "SpartaPlayerController.h" // PlayerController 클래스를 사용
+#include "SpartaPlayerController.h" 
 #include "SpartaGameState.h"
+#include "SpartaGameInstance.h"
+#include "StageWaveInfo.h"
+#include "Item/CoinItem.h"
+#include "SpawnVolume.h"
+
+#include "Blueprint/UserWidget.h"
+#include "Kismet/GameplayStatics.h"
+#include "Components/TextBlock.h"
+
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpartaCoinMode)
 
 ASpartaCoinMode::ASpartaCoinMode()
@@ -12,4 +21,172 @@ ASpartaCoinMode::ASpartaCoinMode()
 	DefaultPawnClass = ASpartaCharacter::StaticClass();
 	PlayerControllerClass = ASpartaPlayerController::StaticClass();
 	GameStateClass = ASpartaGameState::StaticClass();
+}
+
+void ASpartaCoinMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// 게임 시작 시 첫 레벨부터 진행
+	StartLevel();
+}
+
+void ASpartaCoinMode::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	ASpartaGameState* SpartaGameState = GetGameState<ASpartaGameState>();
+	if (SpartaGameState)
+	{
+		float CurrentRemainingTime = SpartaGameState->GetRemainingWaveTime();
+		CurrentRemainingTime -= DeltaSeconds;
+		SpartaGameState->SetRemainingWaveTime(CurrentRemainingTime);
+
+		if (CurrentRemainingTime <= 0.0f)
+		{
+			EndWave();
+		}
+	}
+}
+
+void ASpartaCoinMode::OnGameOver()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Game Over!!"));
+	
+	if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
+	{
+		if (ASpartaPlayerController* SpartaPlayerController = Cast<ASpartaPlayerController>(PlayerController))
+		{
+			SpartaPlayerController->SetPause(true);
+			SpartaPlayerController->ShowMainMenu(true);
+		}
+	}
+}
+
+void ASpartaCoinMode::StartLevel()
+{
+	if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
+	{
+		if (ASpartaPlayerController* SpartaPlayerController = Cast<ASpartaPlayerController>(PlayerController))
+		{
+			SpartaPlayerController->ShowGameHUD();
+		}
+	}
+
+	ASpartaGameState* SpartaGameState = GetGameState<ASpartaGameState>();
+	if (SpartaGameState)
+	{
+		// 레벨 시작 시, 코인 개수 초기화
+		SpartaGameState->SetSpawnedCoinCount(0);
+		SpartaGameState->SetCollectedCoinCount(0);
+	}
+
+	// 첫 웨이브 시작
+	CurrentWaveIndex = 0;
+	StartWave();
+}
+
+void ASpartaCoinMode::StartWave()
+{
+	if (!CurrentStageData || CurrentWaveIndex >= CurrentStageData->WaveInfo.Num())
+	{
+		// 모든 웨이브가 끝났거나 데이터가 없으면 레벨 종료
+		GetGameInstance<USpartaGameInstance>()->EndLevel();
+		return;
+	}
+
+	FWaveInfo CurrentWave = CurrentStageData->WaveInfo[CurrentWaveIndex];
+
+	ASpartaGameState* SpartaGameState = GetGameState<ASpartaGameState>();
+	if (SpartaGameState)
+	{
+		// 웨이브 시작 시, 코인 개수 초기화 (각 웨이브마다 스폰되는 코인 개수를 초기화)
+		SpartaGameState->SetSpawnedCoinCount(0);
+		SpartaGameState->SetCollectedCoinCount(0);
+
+		// 웨이브 남은 시간 설정
+		SpartaGameState->SetRemainingWaveTime(CurrentWave.Time);
+	}
+
+	// 웨이브 함수 실행
+	ProcessWaveFunction(CurrentWave.WaveFunctionType);
+
+	UE_LOG(LogTemp, Warning, TEXT("Wave %d Start! Duration: %.1f"), CurrentWaveIndex + 1, CurrentWave.Time);
+}
+
+void ASpartaCoinMode::EndWave()
+{
+	// 다음 웨이브로 진행
+	CurrentWaveIndex++;
+	StartWave();
+}
+
+void ASpartaCoinMode::ProcessWaveFunction(EWaveFunction FuncType)
+{
+	ASpartaGameState* SpartaGameState = GetGameState<ASpartaGameState>();
+	if (!SpartaGameState)
+	{
+		return;
+	}
+
+	switch (FuncType)
+	{
+		case EWaveFunction::NONE:
+			// 아무것도 하지 않음
+			break;
+		case EWaveFunction::FLOOR_REMOVE:
+			// TODO: 바닥 제거 로직 구현
+			
+			break;
+		default:
+			break;
+	}
+
+	// 현재 맵에 배치된 모든 SpawnVolume을 찾아 아이템 40개를 스폰 (임시)
+	TArray<AActor*> FoundVolumes;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASpawnVolume::StaticClass(), FoundVolumes);
+
+	const int32 ItemToSpawn = 40;
+
+	for (int32 i = 0; i < ItemToSpawn; i++)
+	{
+		if (FoundVolumes.Num() > 0)
+		{
+			ASpawnVolume* SpawnVolume = Cast<ASpawnVolume>(FoundVolumes[0]);
+			if (SpawnVolume)
+			{
+				AActor* SpawnedActor = SpawnVolume->SpawnRandomItem();
+				// 만약 스폰된 액터가 코인 타입이라면 SpawnedCoinCount 증가
+				if (SpawnedActor && SpawnedActor->IsA(ACoinItem::StaticClass()))
+				{
+					SpartaGameState->SetSpawnedCoinCount(SpartaGameState->GetSpawnedCoinCount() + 1);
+				}
+			}				
+		}
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("Spawned %d coin"), SpartaGameState->GetSpawnedCoinCount());
+}
+
+
+
+void ASpartaCoinMode::OnCoinCollected(ACoinItem* CoinItem)
+{
+	ASpartaGameState* SpartaGameState = GetGameState<ASpartaGameState>();
+	if (SpartaGameState)
+	{
+		SpartaGameState->AddScore(CoinItem->GetPointValue());
+		SpartaGameState->SetCollectedCoinCount(SpartaGameState->GetCollectedCoinCount() + 1);
+
+		UE_LOG(LogTemp, Log, TEXT("Coin Collected: %d / %d"), 
+			SpartaGameState->GetCollectedCoinCount(),
+			SpartaGameState->GetSpawnedCoinCount())
+
+		// 현재 레벨에서 스폰된 코인을 전부 주웠다면 즉시 Wave 종료
+		if (SpartaGameState->GetSpawnedCoinCount() > 0 
+			&& SpartaGameState->GetCollectedCoinCount() >= SpartaGameState->GetSpawnedCoinCount())
+		{
+			EndWave();
+		}
+	}
 }

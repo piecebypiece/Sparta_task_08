@@ -1,5 +1,7 @@
 #include "Item\ItemBase.h"
 #include "Components/SphereComponent.h"
+#include "Particles/ParticleSystemComponent.h"
+#include <Kismet\GameplayStatics.h>
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(ItemBase)
 // Sets default values
@@ -48,7 +50,46 @@ void AItemBase::OnItemEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* Ot
 
 void AItemBase::ActivateItem(AActor* Activator)
 {
+	UParticleSystemComponent* Particle = nullptr;
 
+	if (PickupParticle)
+	{
+		Particle = UGameplayStatics::SpawnEmitterAtLocation(
+			GetWorld(),
+			PickupParticle,
+			GetActorLocation(),
+			GetActorRotation(),
+			true
+		);
+	}
+	
+	if (PickupSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			GetWorld(),
+			PickupSound,
+			GetActorLocation()
+		);
+	}
+
+	if (Particle)
+	{
+		FTimerHandle DestroyParticleTimerHandle;
+		TWeakObjectPtr<UParticleSystemComponent> WeakParticle = Particle;
+
+		GetWorld()->GetTimerManager().SetTimer(
+			DestroyParticleTimerHandle,
+			[WeakParticle]()
+			{
+				if (WeakParticle.IsValid())
+				{
+					WeakParticle->DestroyComponent();
+				}
+			},
+			2.0f,
+			false
+		);
+	}
 }
 
 FName AItemBase::GetItemType() const

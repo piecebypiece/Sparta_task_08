@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Item\ItemSpawnRow.h"
 #include "SpawnVolume.generated.h"
 
 class UBoxComponent;
@@ -13,22 +14,22 @@ class SPARTA_TASK_8_API ASpawnVolume : public AActor
 {
 	GENERATED_BODY()
 	
-public:	
-	// Sets default values for this actor's properties
-	ASpawnVolume();
+public:
+    ASpawnVolume();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawning")
-	USceneComponent* Scene;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawning")
-	UBoxComponent* SpawningBox;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawning")
-	UDataTable* ItemDataTable;
+    UFUNCTION(BlueprintCallable, Category = "Spawning")
+    AActor* SpawnRandomItem();
 
-	UFUNCTION(BlueprintCallable, Category = "Spawning")
-	AActor* SpawnRandomItem(); // 리턴 형식을 AActor* 로 변경
+protected:
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Spawning")
+    TObjectPtr<USceneComponent> Scene;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawning")
+    TObjectPtr<UBoxComponent> SpawningBox;
 
-	AActor* GetRandomItem() const;
-	AActor* SpawnItem(TSubclassOf<AActor> ItemClass);
-	FVector GetRandomPointInVolume() const;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawning")
+    TObjectPtr<UDataTable> ItemDataTable;
 
+    FVector GetRandomPointInVolume() const;
+    FItemSpawnRow* GetRandomItem() const;
+    AActor* SpawnItem(TSubclassOf<AActor> ItemClass);
 };

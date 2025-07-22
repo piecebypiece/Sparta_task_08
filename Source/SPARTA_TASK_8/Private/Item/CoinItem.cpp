@@ -2,7 +2,8 @@
 
 
 #include "Item/CoinItem.h"
-#include "SpartaGameState.h"
+#include "SpartaCoinMode.h"
+#include "Kismet/GameplayStatics.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(CoinItem)
 
@@ -17,7 +18,7 @@ ACoinItem::ACoinItem()
 void ACoinItem::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 }
 
 void ACoinItem::ActivateItem(AActor* Activator)
@@ -29,14 +30,13 @@ void ACoinItem::ActivateItem(AActor* Activator)
 		return;
 	}
 
-	if (UWorld* World = GetWorld())
+	ASpartaCoinMode* Mode = Cast<ASpartaCoinMode>(UGameplayStatics::GetGameMode(GetWorld()));
+
+	if (Mode)
 	{
-		if (ASpartaGameState* GameState = World->GetGameState<ASpartaGameState>())
-		{
-			GameState->AddScore(PointValue);
-			GameState->OnCoinCollected();
-		}
+		Mode->OnCoinCollected(this);
 	}
+
 	DestroyItem();
 }
 

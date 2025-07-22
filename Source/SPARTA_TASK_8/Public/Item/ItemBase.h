@@ -32,6 +32,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item|Component")
 	TObjectPtr<UStaticMeshComponent> StaticMesh;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|Effects")
+	TObjectPtr<UParticleSystem> PickupParticle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|Effects")
+	TObjectPtr<USoundBase> PickupSound;
 	
 	virtual void OnItemOverlap(	UPrimitiveComponent* OverlappedComp,
 		AActor* OtherActor,

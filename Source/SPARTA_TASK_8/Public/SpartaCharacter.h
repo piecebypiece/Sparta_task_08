@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 #include "SpartaCharacter.generated.h"
+class UWidgetComponent;
 class USpringArmComponent;
 class UCameraComponent;
 struct FInputActionValue;
@@ -35,6 +36,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
 	float SprintSpeed; 	// 실제 스프린트 속도
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	TObjectPtr<UWidgetComponent> OverheadWidget;
 
 protected:
 	// Called when the game starts or when spawned
@@ -75,6 +78,8 @@ protected:
 	// 사망 처리 함수 (체력이 0 이하가 되었을 때 호출)
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	virtual void OnDeath();
+	UFUNCTION(BlueprintCallable, Category = "Health")
+	void UpdateOverheadHP();
 
 	// 데미지 처리 함수 - 외부로부터 데미지를 받을 때 호출됨
 	// 또는 AActor의 TakeDamage()를 오버라이드
