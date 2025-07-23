@@ -5,8 +5,12 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
 #include "StageWaveInfo.h"
+#include "SpartaGameInstance.h"
+#include "Delegates/DelegateCombinations.h"
 #include "SpartaCoinMode.generated.h"
 
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWaveStart, int32, WaveIndex, FWaveInfo, CurrentWave);
 /**
  * 
  */
@@ -43,6 +47,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Wave")
 	void EndWave(bool bIsClear);
 
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnWaveStart OnWaveStart;
+
+	int32 GetCurrentWaveIndex() const { return CurrentWaveIndex; }
 
 protected:
 	virtual void BeginPlay() override;

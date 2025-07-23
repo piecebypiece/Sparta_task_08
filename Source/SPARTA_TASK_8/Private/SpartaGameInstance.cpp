@@ -68,6 +68,13 @@ void USpartaGameInstance::EndLevel(bool bIsClear)
 	if (CurrentLevelIndex >= GetMaxLevels())
 	{
 		CurrentLevelIndex = -1;
+		auto World = GetWorld();
+
+		auto PlayerController = World->GetFirstPlayerController();
+
+		auto SpartaController = Cast<ASpartaPlayerController>(PlayerController);
+		SpartaController->ShowMainMenu(true);
+		SpartaController->SetPause(true);
 		return;
 	}
 	StartLevel(CurrentLevelIndex);

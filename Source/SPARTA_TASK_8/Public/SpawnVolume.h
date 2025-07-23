@@ -25,9 +25,6 @@ public:
     TSubclassOf<AActor> RandomItemClass();
 
     UFUNCTION(BlueprintCallable, Category = "Spawning")
-    int32 GetSpawnNum() const { return SpawnNum; }
-
-    UFUNCTION(BlueprintCallable, Category = "Spawning")
     AActor* SpawnItem(TSubclassOf<AActor> ItemClass);
 protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Spawning")
@@ -37,9 +34,6 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawning")
     TObjectPtr<UDataTable> ItemDataTable;
-
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawning")
-    int32 SpawnNum;
 
     FVector GetRandomPointInVolume() const;
     FItemSpawnRow* GetRandomItem() const;

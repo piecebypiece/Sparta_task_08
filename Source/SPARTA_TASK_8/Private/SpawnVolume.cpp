@@ -17,7 +17,6 @@ ASpawnVolume::ASpawnVolume()
 	SpawningBox->SetupAttachment(Scene);
 
 	ItemDataTable = nullptr;
-    SpawnNum = 10;
 }
 
 AActor* ASpawnVolume::SpawnRandomItem()

@@ -80,10 +80,11 @@ void ASpartaCoinMode::StartLevel()
 
 void ASpartaCoinMode::StartWave()
 {
+	auto GInst = GetGameInstance<USpartaGameInstance>();
 	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Start Wave %d"), 
-		GetGameInstance<USpartaGameInstance>()->GetCurrentLevelIndex()));
+		CurrentWaveIndex));
 
-	const FLevelInfo* CurrentStageData = GetGameInstance<USpartaGameInstance>()->GetCurrentLevelInfo();
+	const FLevelInfo* CurrentStageData = GInst->GetCurrentLevelInfo();
 	UStageWaveInfo* levelWaveInfo = nullptr;
 	levelWaveInfo = CurrentStageData ? 
 		Cast<UStageWaveInfo>(CurrentStageData->levelWaveInfo) : nullptr;
@@ -112,60 +113,8 @@ void ASpartaCoinMode::StartWave()
 		SpartaGameState->SetRemainingWaveTime(CurrentWave.Time);
 	}
 
-	TArray<AActor*> FoundVolumes;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASpawnVolume::StaticClass(), FoundVolumes);
 
-	if (FoundVolumes.Num() > 0)
-	{
-		int32 CollectCoinScore = CurrentWave.CollectCoinScore;
-
-		TArray<int32> VolumeSpawnNums;
-		VolumeSpawnNums.Reserve(FoundVolumes.Num());
-		for (int32 i = 0; i < FoundVolumes.Num(); ++i)
-			VolumeSpawnNums.Push(0);
-
-		bool bLastSpawn = true; 
-		while (bLastSpawn)
-		{
-			bLastSpawn = false;
-			for (int32 i = 0; i < FoundVolumes.Num(); ++i)
-			{
-				const auto SpawnVolumesActor = FoundVolumes[i];
-				const auto SpawnVolume = Cast<ASpawnVolume>(SpawnVolumesActor);
-				if (IsValid(SpawnVolume) == false
-					or VolumeSpawnNums[i] == SpawnVolume->GetSpawnNum())
-				{
-					continue;
-				}
-
-				TSubclassOf<AActor> RandomItemClass = SpawnVolume->RandomItemClass();
-				bool bIsCoin = RandomItemClass->IsChildOf(ACoinItem::StaticClass());
-				AActor* SpawnedActor = nullptr;
-
-				++VolumeSpawnNums[i];
-				bLastSpawn = true;
-
-				if (bIsCoin)
-				{	// 코인은 정해진 만큼만 소환된다.
-					ACoinItem* CDOCoin = Cast<ACoinItem>(RandomItemClass.GetDefaultObject());
-					CollectCoinScore -= CDOCoin->GetPointValue();
-				}
-				SpawnedActor = SpawnVolume->SpawnItem(RandomItemClass);
-				// 만약 스폰된 액터가 코인 타입이라면 SpawnedCoinCount 증가
-				if (SpawnedActor && bIsCoin)
-				{
-					SpartaGameState->SetSpawnedCoinCount(SpartaGameState->GetSpawnedCoinCount() + 1);
-				}
-
-				if (bIsCoin and CollectCoinScore < 0)
-				{	// 더이상 코인은 소환할 수 없기 때문에 이 볼륨에서 추가 소환을 막는다.
-					VolumeSpawnNums[i] = SpawnVolume->GetSpawnNum();
-					bLastSpawn = false;
-				}
-			}
-		}
-	}
-
+	OnWaveStart.Broadcast(CurrentWaveIndex, CurrentWave);
 	// 웨이브 함수 실행
 	ProcessWaveFunction(CurrentWave.WaveFunctionType);
 

@@ -8,6 +8,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
+#include <SpartaCoinMode.h>
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpartaPlayerController)
 
 ASpartaPlayerController::ASpartaPlayerController()
@@ -172,20 +173,20 @@ void ASpartaPlayerController::UpdateHUD()
 	}
 	
 	auto* SpartaGameInst = GetGameInstance<USpartaGameInstance>();
-
+	ASpartaGameState* GState = Cast<ASpartaGameState>(GetWorld()->GetGameState());
+	ASpartaCoinMode* GMode = Cast<ASpartaCoinMode>(UGameplayStatics::GetGameMode(GetWorld()));
 	if (UTextBlock* TimeText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("Time"))))
 	{
-		if (ASpartaGameState* State = Cast<ASpartaGameState>(GetWorld()->GetGameState()))
+		if (GState)
 		{
-			float RemainingTime = State->GetRemainingWaveTime();
+			float RemainingTime = GState->GetRemainingWaveTime();
 			TimeText->SetText(FText::FromString(FString::Printf(TEXT("Time: %.1f"), RemainingTime)));
 		}
 	}
 
 	if (UTextBlock* ScoreText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("Score"))))
 	{
-
-		if (ASpartaGameState* GState = Cast<ASpartaGameState>(GetWorld()->GetGameState()))
+		if (GState)
 		{
 			ScoreText->SetText(FText::FromString(
 				FString::Printf(TEXT("Score: %d"), GState->GetScore())
@@ -195,5 +196,9 @@ void ASpartaPlayerController::UpdateHUD()
 	if (UTextBlock* LevelIndexText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("Level"))))
 	{
 		LevelIndexText->SetText(FText::FromString(FString::Printf(TEXT("Level: %d"), SpartaGameInst->GetCurrentLevelIndex() + 1)));
+	}
+	if (UTextBlock* WaveIndexText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("Wave"))))
+	{
+		WaveIndexText->SetText(FText::FromString(FString::Printf(TEXT("Wave: %d"), GMode->GetCurrentWaveIndex() + 1)));
 	}
 }
